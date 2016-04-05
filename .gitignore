@@ -1,5 +1,17 @@
 Makefile.in
 aclocal.m4
 autom4te.cache/
+.deps/
+Makefile
+config.h
+config.h.in~
 config.h.in
 configure
+config.log
+config.status
+stamp-h1
+
+proccer-*.tar.gz
+proccer
+src/.dirstamp
+src/*.o

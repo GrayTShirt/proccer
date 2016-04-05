@@ -11,6 +11,9 @@ AM_CFLAGS += -std=gnu99
 CORE_SRC  =
 CORE_SRC += src/proccer.h src/proccer.c
 
-bin_PROGRAMS = proccer
+bin_PROGRAMS          = proccer
+proccer_DEPENDENCIES = config.h
+proccer_SOURCES      = $(CORE_SRC)
+
 
 test: check
