@@ -1,12 +1,13 @@
 #include "proccer.h"
 
-static char * _pfile(int pid, char *file)
+static char * _pfile(int pid, char *file) /* {{{ */
 {
 	static char tmp[32];
 	sprintf(tmp, "/proc/%d/%s", pid, file);
 	return tmp;
 }
-char * _trim(char *str)
+/* }}} */
+char * _trim(char *str) /* {{{ */
 {
 	char *end;
 	while (isspace(*str)) str++;
@@ -18,15 +19,9 @@ char * _trim(char *str)
 	*(end + 1) = 0;
 	return str;
 }
-/*
-process_ pull_stats(int pid)
-{
-	process_ proc;
-	return proc;
-}
-*/
+/* }}} */
 
-int main (void)
+int get_procs(process_ **processes) /* {{{ */
 {
 	pid_t pids[MAX_PIDS];
 	DIR *dp;
@@ -42,7 +37,7 @@ int main (void)
 		fprintf(stderr, "failed to /proc %s\n", strerror(errno));
 		exit(1);
 	}
-
+	int current = 0;
 	for (int i = 0; i < count; i++) {
 		if (pids[i] == 2 || pids[i] == 1) continue;
 		FILE *io = malloc(sizeof(FILE));
@@ -52,22 +47,23 @@ int main (void)
 		}
 		char *tcomm = malloc(128);
 		char state;
-		process_ process;
-		if (fscanf(io, "%u %s %c %u ", &process.pid, tcomm, &state, &process.ppid) == 0) {
-			fprintf(stderr, "failed to read stat file for pid %u: %s\n", process.pid, strerror(errno));
+		process_ *process = malloc(sizeof(process_));
+		// memset(process, 0, sizeof(process_));
+		if (fscanf(io, "%u %s %c %u ", &process->pid, tcomm, &state, &process->ppid) == 0) {
+			fprintf(stderr, "failed to read stat file for pid %u: %s\n", process->pid, strerror(errno));
 			exit(1);
 		}
 		fclose(io);
-		if (process.ppid == 2) continue;
+		if (process->ppid == 2) continue;
 		if (!(io = fopen(_pfile(pids[i], "cmdline"), "r"))) {
-			fprintf(stderr, "failed to open cmdline file for pid %d; %s\n", process.pid, strerror(errno));
+			fprintf(stderr, "failed to open cmdline file for pid %d; %s\n", process->pid, strerror(errno));
 			exit(1);
 		}
 		size_t len = 0;
 		char *path;
 		if (getline(&path, &len, io) == -1) {
 			fclose(io);
-			fprintf(stderr, "failed to read cmdline file for pid %d; %s\n", process.pid, strerror(errno));
+			fprintf(stderr, "failed to read cmdline file for pid %d; %s\n", process->pid, strerror(errno));
 			exit(1);
 		}
 		fclose(io);
@@ -75,10 +71,20 @@ int main (void)
 			if (path[j] == '\0')
 				path[j] = ' ';
 		path[len - 1] = 0;
-		process.cmd = _trim(path);
-		// @TEST
-		// printf("pid [%u] ppid [%u] cmd [%s]\n", process.pid, process.ppid, process.cmd);
+		process->cmd = _trim(path);
+		processes[current++]  = process;
 	}
+	return current;
+}
+/* }}} */
 
-	return 0;
+int main (void)
+{
+	process_ **processes = malloc(sizeof(process_ *) * 1024);
+	int size;
+	if ((size = get_procs(processes)) == 0)
+		exit(1);
+	process_ ***procs = &processes;
+	for (int i = 0; i < size; i++)
+		printf("pid [%d] cmd [%s]\n", (*procs)[i]->pid, (*procs)[i]->cmd);
 }
