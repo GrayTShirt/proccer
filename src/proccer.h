@@ -62,6 +62,6 @@ typedef struct {
 	char         *cmd;
 } process_;
 
-// process_ pull_stat(int pid)
+int get_procs(process_ **processes);
 
 #endif

@@ -13,7 +13,7 @@ CORE_SRC += src/proccer.h src/proccer.c
 
 bin_PROGRAMS          = proccer
 proccer_DEPENDENCIES = config.h
-proccer_SOURCES      = $(CORE_SRC)
+proccer_SOURCES      = $(CORE_SRC) src/main.c
 
 
 test: check
