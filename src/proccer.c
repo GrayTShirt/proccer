@@ -29,20 +29,22 @@ int get_procs(process_ **processes) /* {{{ */
 	int current = 0;
 	unsigned long long x;
 	for (int i = 0; i < count; i++) {
-		if (pids[i] == 2 || pids[i] == 1) continue;
+		if (pids[i] == 2 || pids[i] == 1 || pids[i] == 0) continue;
 		process_ *process = malloc(sizeof(process_));
 		process->stats    = malloc(sizeof(stats_));
+		process->stats->procs = 1;
 		FILE *io = malloc(sizeof(FILE));
 		if (!(io = fopen(_pfile(pids[i], "stat"), "r"))) {
-			fprintf(stderr, "failed to open stats file for pid %d; %s\n", process->pid, strerror(errno));
+			fprintf(stderr, "failed to open stat file for pid %d; %s\n", process->pid, strerror(errno));
 			exit(1);
 		}
-		int counter = 2; // align with man proc
+		int counter = 3; // align with man proc
 		while (fgets(buf, 8192, io) != NULL) {
-			char *pch = strtok(buf, " ");
+			char *pch = strtok(buf, ")");
 			while (pch != NULL) {
 				pch = strtok(NULL, " ");
-				     if (counter ==  4) process->ppid = strtoul(pch, NULL, 0);
+				     if (counter ==  3) process->stats->state  = pch[0];
+				else if (counter ==  4) process->ppid          = strtoul(pch, NULL, 0);
 				else if (counter == 14) process->stats->utime  = strtoul(pch, NULL, 0);
 				else if (counter == 15) process->stats->stime  = strtoul(pch, NULL, 0);
 				else if (counter == 16) process->stats->cutime = strtoul(pch, NULL, 0);
@@ -52,11 +54,11 @@ int get_procs(process_ **processes) /* {{{ */
 				counter++;
 			}
 		}
+		fclose(io);
 		if (process->ppid == 2) continue;
 
-		fclose(io);
 		if (!(io = fopen(_pfile(pids[i], "status"), "r"))) {
-			fprintf(stderr, "failed to open stat file for pid %d; %s\n", pids[i], strerror(errno));
+			fprintf(stderr, "failed to open status file for pid %d; %s\n", pids[i], strerror(errno));
 			exit(1);
 		}
 		while (fgets(buf, 8192, io) != NULL) {
@@ -110,6 +112,19 @@ int get_procs(process_ **processes) /* {{{ */
 		process->cmd = strdup(path);
 		free(path);
 		processes[current++]  = process;
+	}
+	for (int i = 0; i < current; i++) {
+		if (processes[i]->ppid == 1) continue;
+		process_ *process = processes[i];
+		while (process->ppid != 1) {
+			for (int j = 0; j < current; j++) {
+				if (processes[j]->pid != process->ppid) continue;
+				process = processes[j];
+				break;
+			}
+			if (process->pid == processes[i]->pid) break;
+			process->stats->procs++;
+		}
 	}
 	return current;
 }
