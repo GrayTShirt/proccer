@@ -42,7 +42,7 @@ typedef struct {
 	unsigned long long  cutime;
 	unsigned long long  cstime;
 	unsigned long long  gtime;
-	unsigned long long  itime;
+	unsigned long long  cgtime;
 
 	char state;
 

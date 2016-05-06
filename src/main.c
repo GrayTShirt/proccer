@@ -9,5 +9,5 @@ int main (void)
 		exit(1);
 	process_ ***procs = &processes;
 	for (int i = 0; i < size; i++)
-		printf("pid [ %u ] threads [ %lu ] VCtx [ %lu ] \n", (*procs)[i]->pid, (*procs)[i]->stats->threads, (*procs)[i]->stats->vctx);
+		printf("pid [ %u ] threads [ %lu ] VCtx [ %lu ] cmd [ %s ]\n", (*procs)[i]->pid, (*procs)[i]->stats->threads, (*procs)[i]->stats->vctx, (*procs)[i]->cmd);
 }
