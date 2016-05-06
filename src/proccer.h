@@ -32,7 +32,8 @@
 #include <pthread.h>
 
 
-#define MAX_PIDS 1024
+#define MAX_PIDS 8192
+#define streq(a,b) (strcmp((a), (b)) == 0)
 
 
 typedef struct {
@@ -43,6 +44,8 @@ typedef struct {
 	unsigned long long  gtime;
 	unsigned long long  itime;
 
+	char state;
+
 	unsigned long       threads;
 	unsigned int        procs;
 	unsigned long       fds;
@@ -52,6 +55,8 @@ typedef struct {
 	unsigned long       vmrss;
 	unsigned long       vmhwm;
 
+	unsigned long       vctx;
+	unsigned long       ictx;
 } stats_;
 
 
